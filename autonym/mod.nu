@@ -89,6 +89,17 @@ export def "reject" [name: string]: nothing -> nothing {
   null
 }
 
+# the following is the help text
+
+# autonym - automatic pseudonym generator
+#
+# commands:
+#   autonym                review suggestions interactively
+#   autonym scan           preview suggestions
+#   autonym generate       regenerate potential aliases
+#   autonym status         enabled / rejected / pending counts
+#   autonym enable <name>  turn a suggestion on
+#   autonym reject <name>  dismiss a suggestion for good
 export def "main" []: nothing -> nothing {
   loop {
     let path = (emit aliases-path)
