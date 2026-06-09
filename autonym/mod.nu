@@ -124,11 +124,50 @@ export def "main" []: nothing -> nothing {
         _ => { emit forget $r.name | ignore }
       }
     }
-    if $decided.regen {
-      review spin "regenerating suggestions…" {|| hook rescan }
-      continue
+    match $decided.action {
+      "regen" => { review spin "regenerating suggestions…" {|| hook rescan }; continue }
+      "search" => { search-add; continue }
+      "add" => { add-alias (input $"  command to alias: "); continue }
+      _ => { print $"  (ansi green)saved(ansi reset)"; return }
     }
-    print $"  (ansi green)saved(ansi reset)"
+  }
+}
+
+def add-alias [body: string]: nothing -> nothing {
+  let body = ($body | str trim)
+  if ($body | is-empty) { return }
+  let reserved = (emit read-state | get enabled | get name)
+  let proposed = (name propose $body --reserved $reserved)
+  let hint = (if ($proposed == null) { "" } else { $" [($proposed)]" })
+  let typed = (input $"  alias name($hint): " | str trim)
+  let nm = (if ($typed | is-empty) { $proposed } else { $typed })
+  if ($nm == null or ($nm | is-empty)) {
+    print $"  (ansi attr_dimmed)no name; skipped(ansi reset)"
     return
   }
+  if (emit enable $nm --body $body) {
+    print $"  [(ansi green)✓(ansi reset)] added (ansi attr_bold)($nm)(ansi reset) = ($body)"
+  } else {
+    print $"  (ansi red)could not add ($nm)(ansi reset)"
+  }
+}
+
+# fuzzy-search the full shell history for a command to alias
+def search-add []: nothing -> nothing {
+  let enabled_bodies = (emit read-state | get enabled | get body)
+  let ranked = (
+    ingest read --limit 0
+    | uniq --count
+    | sort-by count --reverse
+    | get value
+    | where {|c| ($c | str length) > 2 and ($c not-in $enabled_bodies) }
+  )
+  if ($ranked | is-empty) {
+    print $"  (ansi attr_dimmed)no history to search(ansi reset)"
+    return
+  }
+  print -n $"(ansi -e '2J')(ansi -e 'H')"
+  let pick = ($ranked | input list --fuzzy "search history")
+  if ($pick | is-empty) { return }
+  add-alias $pick
 }

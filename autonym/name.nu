@@ -1,4 +1,5 @@
 use syllable.nu
+use parse.nu
 
 def split-words [token: string]: nothing -> list<string> {
   $token | str downcase | split row --regex '[-_]+' | where {|w| $w != "" }
@@ -69,4 +70,17 @@ export def "assign" [
     ))
   }
   $results
+}
+
+# propose an alias for an arbitrary command
+export def "propose" [body: string, --reserved: list<string> = []]: nothing -> any {
+  let sig = (parse line $body | get -o 0)
+  if ($sig == null) { return null }
+  let cand = ($sig | upsert body $body | upsert body_len ($body | str length) | upsert count 1)
+  let base = (collision-base ([$cand.head] ++ $reserved))
+  let taken = ($base | reduce --fold {} {|n, acc| $acc | insert $n true })
+  candidates $cand
+  | where {|n| ($n | str length) >= 2 }
+  | where {|n| ($taken | get -o $n) != true }
+  | first
 }

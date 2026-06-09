@@ -83,7 +83,8 @@ export def "run" [rows: list]: nothing -> any {
   }
   let initial = ($rows | get state)
 
-  print $"  (ansi attr_dimmed)↑↓/jk move · space cycle · y enable · x reject · r removed · g regen · enter save · esc cancel(ansi reset)"
+  print -n $"(ansi -e '2J')(ansi -e 'H')"
+  print $"  (ansi attr_dimmed)jk move · space cycle · y/x enable/reject · a add · s search · g regen · r removed · enter save · esc cancel(ansi reset)"
   print -n (ansi -e '?25l')
   mut states = $initial
   mut show_removed = false
@@ -96,10 +97,10 @@ export def "run" [rows: list]: nothing -> any {
     let ev = (input listen --types [key])
     let code = ($ev.code? | default "")
     if ($code == "esc" or ($ev.key_type? == "char" and $code == "q")) { break }
-    if ($code == "enter" or $code == "g") {
+    if ($code in ["enter" "g" "s" "a"]) {
       let final = $states
       $result = {
-        regen: ($code == "g")
+        action: (match $code { "enter" => "save", "g" => "regen", "s" => "search", _ => "add" })
         rows: ($rows | enumerate | each {|it| $it.item | upsert state ($final | get $it.index) })
       }
       break
