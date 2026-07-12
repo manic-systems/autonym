@@ -29,7 +29,7 @@ def onset-len [cluster: list<string>]: nothing -> int {
 
 # split one word into syllables via the maximal-onset principle
 export def syllables [token: string]: nothing -> list<string> {
-  let chars = ($token | str downcase | split chars)
+  let chars = ($token | str lowercase | split chars)
   let n = ($chars | length)
   if $n == 0 { return [] }
 
@@ -63,7 +63,7 @@ export def syllables [token: string]: nothing -> list<string> {
 }
 
 def split-words [body: string]: nothing -> list<string> {
-  $body | str downcase | split row --regex '[-_ ]+' | where {|w| $w != "" }
+  $body | str lowercase | split row --regex '[-_ ]+' | where {|w| $w != "" }
 }
 
 def syl-initials [word: string]: nothing -> list<string> {

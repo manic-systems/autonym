@@ -2,12 +2,12 @@ use syllable.nu
 use parse.nu
 
 def split-words [token: string]: nothing -> list<string> {
-  $token | str downcase | split row --regex '[-_]+' | where {|w| $w != "" }
+  $token | str lowercase | split row --regex '[-_]+' | where {|w| $w != "" }
 }
 
 def flag-words [cand: record]: nothing -> list<string> {
   $cand.flags
-    | each {|f| $f | str trim --left --char '-' | str downcase | str replace --all --regex '[-_]+' '' }
+    | each {|f| $f | str trim --left --char '-' | str lowercase | str replace --all --regex '[-_]+' '' }
     | where {|w| $w != "" }
 }
 
